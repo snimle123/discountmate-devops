@@ -11,8 +11,8 @@ pipeline {
             steps {
                 echo "Building DiscountMate backend..."
                 dir('backend') {
-                    sh 'npm install'
-                    sh 'docker build -t discountmate:latest .'
+                    bat 'npm install'
+                    bat 'docker build -t discountmate:latest .'
                 }
             }
         }
@@ -21,7 +21,7 @@ pipeline {
             steps {
                 echo "Running unit tests..."
                 dir('backend') {
-                    sh 'npm test'
+                    bat 'npm test'
                 }
             }
         }
@@ -31,7 +31,7 @@ pipeline {
                 echo "Running SonarQube scan..."
                 withSonarQubeEnv('SonarQubeServer') {
                     dir('backend') {
-                        sh 'sonar-scanner -Dsonar.projectKey=discountmate -Dsonar.sources=.'
+                        bat 'sonar-scanner -Dsonar.projectKey=discountmate -Dsonar.sources=.'
                     }
                 }
             }
@@ -41,7 +41,7 @@ pipeline {
             steps {
                 echo "Running Snyk security scan..."
                 dir('backend') {
-                    sh 'snyk test || true'   
+                    bat 'snyk test || exit 0'
                 }
             }
         }
@@ -49,22 +49,22 @@ pipeline {
         stage('Deploy to Staging') {
             steps {
                 echo "Deploying to staging..."
-                sh 'docker run -d -p 3000:3000 --name discountmate-staging discountmate:latest || true'
+                bat 'docker run -d -p 3000:3000 --name discountmate-staging discountmate:latest || exit 0'
             }
         }
 
         stage('Release to Production') {
             steps {
                 echo "Promoting to production..."
-                sh 'docker tag discountmate:latest discountmate:prod'
-                sh 'docker run -d -p 4000:3000 --name discountmate-prod discountmate:prod || true'
+                bat 'docker tag discountmate:latest discountmate:prod'
+                bat 'docker run -d -p 4000:3000 --name discountmate-prod discountmate:prod || exit 0'
             }
         }
 
         stage('Monitoring') {
             steps {
                 echo "Checking health of production app..."
-                sh 'curl http://localhost:4000/health || exit 1'
+                bat 'curl http://localhost:4000/health || exit 1'
             }
         }
     }
