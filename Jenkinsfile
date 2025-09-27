@@ -52,25 +52,30 @@ pipeline {
 
         stage('Deploy to Staging') {
             steps {
-                echo "Deploying to staging..."
-                bat 'docker run -d -p 3000:3000 --name discountmate-staging discountmate:latest || exit 0'
+                echo "Deploying to staging on port 5000..."
+                bat 'docker stop discountmate-staging || exit 0'
+                bat 'docker rm discountmate-staging || exit 0'
+                bat 'docker run -d -p 5000:3000 --name discountmate-staging discountmate:latest || exit 0'
             }
         }
 
         stage('Release to Production') {
             steps {
-                echo "Promoting to production..."
+                echo "Promoting to production on port 6000..."
+                bat 'docker stop discountmate-prod || exit 0'
+                bat 'docker rm discountmate-prod || exit 0'
                 bat 'docker tag discountmate:latest discountmate:prod'
-                bat 'docker run -d -p 4000:3000 --name discountmate-prod discountmate:prod || exit 0'
+                bat 'docker run -d -p 6000:3000 --name discountmate-prod discountmate:prod || exit 0'
             }
         }
 
         stage('Monitoring') {
             steps {
                 echo "Checking health of production app..."
-                bat 'curl http://localhost:4000/health || exit 1'
+                bat 'curl http://localhost:6000/health || exit 1'
             }
         }
     }
 }
+
 
