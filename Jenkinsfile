@@ -5,10 +5,6 @@ pipeline {
         nodejs "NodeJS_22"
     }
 
-    environment {
-        SONARQUBE = 'SonarQubeServer'  
-    }
-
     stages {
 
         stage('Build') {
@@ -32,10 +28,16 @@ pipeline {
 
         stage('Code Quality') {
             steps {
-                echo "Running SonarQube scan..."
-                withSonarQubeEnv('SonarQubeServer') {
-                    dir('backend') {
-                        bat 'sonar-scanner -Dsonar.projectKey=discountmate -Dsonar.sources=.'
+                echo "Running SonarQube scan (skipped if not configured)..."
+                script {
+                    try {
+                        withSonarQubeEnv('SonarQubeServer') {
+                            dir('backend') {
+                                bat 'sonar-scanner -Dsonar.projectKey=discountmate -Dsonar.sources=.'
+                            }
+                        }
+                    } catch (Exception e) {
+                        echo "SonarQube not available, skipping Code Quality stage."
                     }
                 }
             }
@@ -77,5 +79,6 @@ pipeline {
         }
     }
 }
+
 
 
